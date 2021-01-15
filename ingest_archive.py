@@ -39,7 +39,7 @@ def checkfor(body):
         if stock in body:
             return [True, stock[1:]]
     return [False, ""]
-cols = dict.fromkeys(os.listdir("stocknet"), [])
+cols = dict.fromkeys(os.listdir("stocknet"), 0)
 
 archivedir = "archiveteam-twitter-stream-2019-06"
 download(archivedir, verbose=True)
@@ -57,9 +57,10 @@ for file in glob.glob("working" + "/**/*.json.bz2", recursive=True):
                 continue
             returned = checkfor(tweet.body)
             if returned[0]:
-                cols[returned[1]].append(tweet.__dict__)
-
-for col in cols:
-    acol = db[col]
-    print(col + ": " + str(len(cols[col])))
-    acol.insert_many(cols[col])
+                db[returned[1]].insert_one(tweet.__dict__)
+                cols[returned[1]] += 1
+total = 0
+for col, count in cols:
+    total += count
+    print(col + ": " + str(count))
+print(total)
