@@ -15,9 +15,6 @@ def get_as_dataframe(stocks):
     for stock in stocks:
         dfs[stock] = (pd.DataFrame.from_records(db[stock].find()))
     return dfs
-thing = get_as_dataframe(["AAPL"])["AAPL"].to_dict('records')[0]
-thing["sentiment"] = 1
-db["AAPL"].update_one({'_id': thing['_id']}, {'$set': thing})
 def send_as_dataframe(dfs):
     for stock, df in dfs:
         df.to_dict('records')
