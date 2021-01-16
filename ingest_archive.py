@@ -49,6 +49,7 @@ for file in os.listdir(archivedir):
         tar.extractall(path="working")
         tar.close()
 for file in glob.glob("working" + "/**/*.json.bz2", recursive=True):
+    print(cols) 
     with bz2.open(file, "rt") as bz_file:
         text = bz_file.readlines()
         for line in text:

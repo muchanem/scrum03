@@ -15,6 +15,7 @@ def get_as_dataframe(stocks):
     for stock in stocks:
         dfs[stock] = (pd.DataFrame.from_records(db[stock].find()))
     return dfs
+
 def send_as_dataframe(dfs):
     for stock, df in dfs:
         df.to_dict('records')
