@@ -8,15 +8,17 @@ from pprint import pprint
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import os
 
-mongo_uri = "mongodb://myUserAdmin:scrum3ncssm@138.197.6.239:27017"  
+#Add client in "MongoDB_CLient"
+mongo_uri = "MongoDB_Client"  
 client = pymongo.MongoClient(mongo_uri)
 
 
 db = client['twitter']
-stock= "XOM"
+#Replace "Stock" with desired stock for sentanalysis
+stock= "Stock"
 
-
-stock_data = pd.DataFrame(list(db.XOM.find()))
+#Replace "Stock" with desired stock for sentanalysis
+stock_data = pd.DataFrame(list(db.Stock.find()))
 
 
 body = stock_data['body']
