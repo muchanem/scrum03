@@ -21,3 +21,16 @@ def send_as_dataframe(dfs):
         df.to_dict('records')
         for adict in df:
             db[stock].update_one({'_id': adict['_id']}, {'$set': adict})
+
+print(get_as_dataframe(["AAPL", "AAB"]))
+
+{
+    "AAB": dataframe
+    "AAPL": dataframe
+}
+
+for stock, val in get_as_dataframe(["AAPL"]):
+   # transformations to dataframe
+    dict[stock] = newdatframe
+
+send_as_dataframe(dict)
