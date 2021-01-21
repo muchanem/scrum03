@@ -90,7 +90,7 @@ def get_weighted_data(dfs):
     for stock, df in final_dfs.items():
         idx1 = pd.date_range(start="2014-01-01", end="2016-03-31")
         idx2 =  pd.date_range(start="2019-06-01", end="2019-08-31")
-        df["date"] = idx1.union(idx2) 
+        df["date"] = idx2
         df["date"] = df["date"].dt.tz_localize("UTC")
         final_dfs[stock] = df 
     final_dfs, dfs = add_weighted_sentiment(final_dfs, dfs) 
@@ -100,36 +100,59 @@ def get_weighted_data(dfs):
 
 def add_sentiment(final_dfs, dfs):
     for stock, df in final_dfs.items():
-        for day in df.itertuples():
-            filtered = dfs[stock].loc[day.date:(day.date + datetime.timedelta(hours=24))]
-            day.sentiment = np.average(filtered["compound"]) 
+        for index, day in df.iterrows():
+            timebefore = day["date"]
+            timeafter = timebefore + datetime.timedelta(hours=24)
+            ndf = dfs[stock] 
+            filtered = ndf.loc[(ndf["date"] >= timebefore) & (ndf["date"] < timeafter)]
+            if filtered.empty: 
+                df.drop(index=index)
+                continue
+            df.at[index, "sentiment"] = np.average(filtered["compound"])
     return final_dfs, dfs
-
 def add_popularity(final_dfs, dfs):
     for stock, df in final_dfs.items():
-        for day in df.itertuples():
-            filtered = dfs[stock].loc[day.date:(day.date + datetime.timedelta(hours=24))]
+        for index, day in df.iterrows():
+            timebefore = day["date"]
+            timeafter = timebefore + datetime.timedelta(hours=24)
+            ndf = dfs[stock] 
+            filtered = ndf.loc[(ndf["date"] >= timebefore) & (ndf["date"] < timeafter)]
+            if filtered.empty: 
+                df.drop(index=index)
+                continue
+
             num_tweets = filtered.shape[0]
-            day.volume = (num_tweets/24)
+            df.at[index,"volume"] = ((num_tweets)/24)
     return final_dfs, dfs
-
-
-def get_unweighted_data(dfs):
+def get_data(dfs):
     dfs = convert_times(dfs)
-    final_dfs = dict.fromkeys(db.collection_names(),pd.DataFrame(columns=["date", "sentiment", "volume", "delta"]))
-    for stock, df in dfs.items():
-        df.set_index(["date"])
+    final_dfs = dict.fromkeys(dfs.keys(),pd.DataFrame(columns=["date", "sentiment", "volume", "delta"]))
+    #for stock, df in dfs.items():
+    #    df.set_index("date", inplace=True)
+    #    dfs[stock] = df
+
     for stock, df in final_dfs.items():
-        df["date"] = (pd.date_range(start="2014-01-01", end="2016-03-31") + pd.date_range(start="2019-06-01", end="2019-08-31"))
+        idx1 = pd.date_range(start="2014-01-01", end="2016-03-31")
+        idx2 =  pd.date_range(start="2019-06-01", end="2019-08-31")
+        df["date"] = idx1.union(idx2)
+        df["date"] = df["date"].dt.tz_localize("UTC")
+        final_dfs[stock] = df 
     final_dfs, dfs = add_sentiment(final_dfs, dfs) 
     final_dfs, dfs = add_popularity(final_dfs, dfs)
-    final_dfs = add_stock_change(final_dfs)
-    for stock, df in final_dfs.items():
-        df = df.dropna()
-        df = df.reindex()
+    final_dfs = add_stock_change(final_dfs) 
     return final_dfs
+
+
+
+
 finalthing = get_weighted_data(get_as_dataframe(["AAPL"]))["AAPL"].dropna()
 print(finalthing)
-finalthing.to_csv("out.csv")
+#finalthing.to_csv("out.csv")
 
-#print(get_weighted_data(get_as_dataframe(["AAPL"]))) 
+from sklearn import linear_model
+
+y = finalthing["delta"]
+x = finalthing[["sentiment"]] 
+linreg = linear_model.LinearRegression()
+linreg.fit(x,y)
+print(linreg.score(x,y))
