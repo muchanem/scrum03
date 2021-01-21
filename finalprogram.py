@@ -145,14 +145,15 @@ def get_data(dfs):
 
 
 
-finalthing = get_weighted_data(get_as_dataframe(["AAPL"]))["AAPL"].dropna()
-print(finalthing)
+finalthing = get_weighted_data(get_as_dataframe(db.list_collections()))
 #finalthing.to_csv("out.csv")
 
 from sklearn import linear_model
-
-y = finalthing["delta"]
-x = finalthing[["sentiment"]] 
-linreg = linear_model.LinearRegression()
-linreg.fit(x,y)
-print(linreg.score(x,y))
+for stock, df in finalthing.values():
+    df = df.dropna()
+    y = df["delta"]
+    x = df[["sentiment", "volume"]] 
+    linreg = linear_model.LinearRegression()
+    linreg.fit(x,y)
+    print(stock, end=" ")
+    print(linreg.score(x,y))
