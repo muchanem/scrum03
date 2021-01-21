@@ -18,8 +18,8 @@ connectionstring = connectionfile.read()
 connectionfile.close()
 client = pymongo.MongoClient(connectionstring)
 db = client["twitter"]
-start = "2014-01-01"
-end = "2016-03-31"
+start = "2019-05-31"
+end = "2019-09-01"
 def givedatetime(x):
     return datetime.strptime(x, '%Y-%m-%d')
 for coll in db.collection_names():
