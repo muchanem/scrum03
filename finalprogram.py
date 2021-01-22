@@ -16,7 +16,11 @@ afilter = {"compound": {"$exists": True}}
 def get_as_dataframe(stocks):
     dfs = dict.fromkeys(stocks)
     for stock in stocks:
-        dfs[stock] = (pd.DataFrame.from_records(db[stock].find(afilter)))
+        df = (pd.DataFrame.from_records(db[stock].find(afilter)))
+        #ldf = df.loc[(df["compound"] >= 0.025)]
+        #gdf = df.loc[df["compound"] <= -0.025] 
+        #df = pd.concat([ldf, gdf])
+        dfs[stock] = df
     return dfs
 def get_prices(stock):
     afilter = {"volume": {"$exists": True}} 
@@ -52,6 +56,8 @@ def add_weighted_sentiment(final_dfs, dfs):
             if filtered.empty: 
                 df.drop(index=index)
                 continue
+            if filtered["weight"].sum() == 0:
+                print(stock)
             df.at[index, "sentiment"] = weighted_average(filtered["compound"], filtered["weight"]) 
     return final_dfs, dfs
 def add_weighted_popularity(final_dfs, dfs):
@@ -64,7 +70,6 @@ def add_weighted_popularity(final_dfs, dfs):
             if filtered.empty: 
                 df.drop(index=index)
                 continue
-
             weights = filtered["weight"].sum()
             num_tweets = filtered.shape[0]
             df.at[index,"volume"] = ((weights * num_tweets)/24)
@@ -82,15 +87,17 @@ def add_stock_change(final_dfs):
 def get_weighted_data(dfs):
     dfs = add_weights(dfs)
     dfs = convert_times(dfs)
-    final_dfs = dict.fromkeys(dfs.keys(),pd.DataFrame(columns=["date", "sentiment", "volume", "delta"]))
+    final_dfs = {}
+    for stock in dfs.keys():
+        final_dfs[stock] = pd.DataFrame(columns=["date", "sentiment", "volume", "delta"])
     #for stock, df in dfs.items():
     #    df.set_index("date", inplace=True)
     #    dfs[stock] = df
 
     for stock, df in final_dfs.items():
-        idx1 = pd.date_range(start="2014-01-01", end="2016-03-31")
+        idx1 = pd.date_range(start="2019-02-01", end="2019-03-30")
         idx2 =  pd.date_range(start="2019-06-01", end="2019-08-31")
-        df["date"] = idx2
+        df["date"] = idx2.union(idx1)
         df["date"] = df["date"].dt.tz_localize("UTC")
         final_dfs[stock] = df 
     final_dfs, dfs = add_weighted_sentiment(final_dfs, dfs) 
@@ -101,7 +108,7 @@ def get_weighted_data(dfs):
 def add_sentiment(final_dfs, dfs):
     for stock, df in final_dfs.items():
         for index, day in df.iterrows():
-            timebefore = day["date"]
+            timebefore = day["date"] - datetime.timedelta(hours=3)
             timeafter = timebefore + datetime.timedelta(hours=24)
             ndf = dfs[stock] 
             filtered = ndf.loc[(ndf["date"] >= timebefore) & (ndf["date"] < timeafter)]
@@ -113,7 +120,7 @@ def add_sentiment(final_dfs, dfs):
 def add_popularity(final_dfs, dfs):
     for stock, df in final_dfs.items():
         for index, day in df.iterrows():
-            timebefore = day["date"]
+            timebefore = day["date"] - datetime.timedelta(hours=3)
             timeafter = timebefore + datetime.timedelta(hours=24)
             ndf = dfs[stock] 
             filtered = ndf.loc[(ndf["date"] >= timebefore) & (ndf["date"] < timeafter)]
@@ -132,7 +139,7 @@ def get_data(dfs):
     #    dfs[stock] = df
 
     for stock, df in final_dfs.items():
-        idx1 = pd.date_range(start="2014-01-01", end="2016-03-31")
+        idx1 = pd.date_range(start="2014-02-01", end="2016-03-30")
         idx2 =  pd.date_range(start="2019-06-01", end="2019-08-31")
         df["date"] = idx1.union(idx2)
         df["date"] = df["date"].dt.tz_localize("UTC")
@@ -145,15 +152,54 @@ def get_data(dfs):
 
 
 
-finalthing = get_weighted_data(get_as_dataframe(db.list_collections()))
+finalthing = get_weighted_data(get_as_dataframe(["AAPL","T", "C", "FB", "D", "GOOG", "AMZN"]))
 #finalthing.to_csv("out.csv")
 
 from sklearn import linear_model
-for stock, df in finalthing.values():
+from sklearn.ensemble import RandomForestRegressor
+print(finalthing)
+
+print("Ridge")
+for stock, df in finalthing.items():
     df = df.dropna()
+    df = df.sample(frac=1).reset_index(drop=True)
+    print(df)
+    y = df["delta"]
+    x = df[["sentiment", "volume"]] 
+    ridge = linear_model.Ridge(alpha=.5)
+    ridge.fit(x,y)
+    print(stock, end=" ")
+    print(ridge.score(x,y))
+
+print("Lasso")
+for stock, df in finalthing.items():
+    df = df.dropna()
+    df = df.sample(frac=1).reset_index(drop=True)
+    y = df["delta"]
+    x = df[["sentiment", "volume"]] 
+    lasso = linear_model.Lasso(alpha=.5)
+    lasso.fit(x,y)
+    print(stock, end=" ")
+    print(lasso.score(x,y))
+
+print("LinReg")
+for stock, df in finalthing.items():
+    df = df.dropna()
+    df = df.sample(frac=1).reset_index(drop=True)
     y = df["delta"]
     x = df[["sentiment", "volume"]] 
     linreg = linear_model.LinearRegression()
     linreg.fit(x,y)
     print(stock, end=" ")
-    print(linreg.score(x,y))
+    print(ridge.score(x,y))
+
+print("Random Forests")
+for stock, df in finalthing.items():
+    df = df.dropna()
+    df = df.sample(frac=1).reset_index(drop=True)
+    y = df["delta"]
+    x = df[["sentiment", "volume"]] 
+    regr = RandomForestRegressor()
+    regr.fit(x,y)
+    print(stock, end=" ")
+    print(ridge.score(x,y))

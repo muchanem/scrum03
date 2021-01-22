@@ -127,7 +127,10 @@ func tojsontweet(line []byte) tweet {
         var tw tweet
         var result map[string]interface{}
         json.Unmarshal(line, &result)
-		user := result["user"].(map[string]interface{})
+                user, err := result["user"].(map[string]interface{})
+                if err != nil {
+                        
+                }
         tw = tweet{
                 Date:      result["created_at"].(string),
                 Body:      result["text"].(string),
