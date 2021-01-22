@@ -35,7 +35,7 @@ def send_as_dataframe(dfs):
 
 def add_weights(dfs):
     for stock, df in dfs.items():
-       df["weight"] = (df["followers"])
+        df["weight"] = df['followers']
     return dfs
 
 def convert_times(dfs):
@@ -95,7 +95,7 @@ def get_weighted_data(dfs):
     #    dfs[stock] = df
 
     for stock, df in final_dfs.items():
-        idx1 = pd.date_range(start="2019-02-01", end="2019-03-30")
+        idx1 = pd.date_range(start="2019-02-01", end="2019-05-30")
         idx2 =  pd.date_range(start="2019-06-01", end="2019-08-31")
         df["date"] = idx2.union(idx1)
         df["date"] = df["date"].dt.tz_localize("UTC")
@@ -151,16 +151,49 @@ def get_data(dfs):
 
 
 
-
-finalthing = get_weighted_data(get_as_dataframe(["AAPL","T", "C", "FB", "D", "GOOG", "AMZN"]))
+testing = ["AAPL", "T", "C", "C", "FB", "D", "GOOG", "AMZON"] 
+finalthing = get_weighted_data(get_as_dataframe(testing))
 #finalthing.to_csv("out.csv")
 
 from sklearn import linear_model
 from sklearn.ensemble import RandomForestRegressor
+#import matplotlib.pyplot as plt
+import sklearn.linear_model
+#from mpl_toolkits.mplot3d import Axes3D
 print(finalthing)
 
+"""
+df = finalthing["FB"]
+df = df.dropna()
+df = df.sample(frac=1).reset_index(drop=True)
+
+X_1 = df["sentiment"].values
+X_2 = df["volume"].values
+Y_train = df["delta"].values
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(X_1, X_2, Y_train, marker='.', color='red')
+ax.set_xlabel("Sentiment")
+ax.set_ylabel("Volume")
+ax.set_zlabel("Price Change")
+y = df["delta"]
+x = df[["sentiment", "volume"]] 
+ridge = linear_model.Ridge(alpha=.5)
+ridge.fit(x,y)
+y_pred = ridge.predict(x)
+
+coefs = ridge.coef_
+intercept = ridge.intercept_
+xs = np.tile(np.arange(61), (61,1))
+ys = np.tile(np.arange(61), (61,1)).T
+zs = xs*coefs[0]+ys*coefs[1]+intercept
+ax.plot_surface(xs,ys,zs, alpha=0.5)
+plt.show()
+
+"""
 print("Ridge")
 for stock, df in finalthing.items():
+
     df = df.dropna()
     df = df.sample(frac=1).reset_index(drop=True)
     print(df)
@@ -170,7 +203,6 @@ for stock, df in finalthing.items():
     ridge.fit(x,y)
     print(stock, end=" ")
     print(ridge.score(x,y))
-
 print("Lasso")
 for stock, df in finalthing.items():
     df = df.dropna()

@@ -31,21 +31,12 @@ button = (html.A(html.Button('Code: Github', className='mr-2'),
 
 card_main = dbc.Card(
     [
-        dbc.CardImg(src="/assets/suisse.jpg", top=True, bottom=False,
+        dbc.CardImg(src="/assets/ncssm1.jpg", top=True, bottom=False,
                     title="Credit Suisse", alt=''),
     ],
     color="light",   # https://bootswatch.com/default/ for more card colors
     inverse=True,   # change color of text (black or white)
     outline=False,  # True = remove the block colors from the background and header
-)
-card_ncssm = dbc.Card(
-    [
-        dbc.CardImg(src="/assets/ncssm1.jpg", top=True, bottom=False,
-                    title="NCSSM", alt=''),
-    ],
-    color="light",   # https://bootswatch.com/default/ for more card colors
-    inverse=True,   # change color of text (black or white)
-    outline=True,  # True = remove the block colors from the background and header
 )
 card_graph1 = dbc.Card(
     [
@@ -85,13 +76,7 @@ app.layout = dbc.Container([
                                  'background-color': '#f9f9f9',
                                  'padding': '10px',
                                  'margin-bottom': '10px'}),
-        dbc.Col(html.H1('Live Sentiment Dashboard',className='text-center mb-4 font-weight-bolder text-black-50',)),
-        dbc.Col(card_ncssm, width=2,style={'width': '10%', 'display': 'inline-block',
-                                 'border-radius': '15px',
-                                 'box-shadow': '2px 2px 2px grey',
-                                 'background-color': '#f9f9f9',
-                                 'padding': '10px',
-                                 'margin-bottom': '10px'}),
+        dbc.Col(html.H1('Live Sentiment Dashboard',className='text-center mb-4 font-weight-bolder text-black-50',))
     ]),
     dbc.Row([
         dbc.Col(html.H1('Real World Data Science with Credit Suisse',className='text-center mb-4 text-muted')),

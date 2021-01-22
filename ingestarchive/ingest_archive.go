@@ -23,7 +23,7 @@ import (
 func main() {
         //fmt.Println(os.Args[1])
 
-        client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://myUserAdmin:scrum3ncssm@138.197.6.239:27017"))
+        client, err := mongo.NewClient(options.Client().ApplyURI(""))
         if err != nil {
                 log.Fatal(err)
         }
